@@ -1,0 +1,8 @@
+# Sensitive files
+/week04/openssl/server.key
+/week04/openssl/server.csr
+/week04/openssl/server.crt
+
+# Packet captures
+*.pcap
+*.pcapng

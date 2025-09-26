@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  web1:
+    build: ./web1
+    container_name: web1
+    networks:
+      - mynet
+  web2:
+    build: ./web2
+    container_name: web2
+    networks:
+      - mynet
+
+networks:
+  mynet:
+    name: mynet
+    driver: bridge

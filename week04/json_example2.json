@@ -1,0 +1,7 @@
+{
+  "id": 101,
+  "name": "홍길동",
+  "age": 20,
+  "major": "Computer Science",
+  "isActive": true
+}

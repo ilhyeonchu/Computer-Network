@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./web/
+    container_name: web
+    ports:
+      - "8000:80"
+    networks:
+      - testnet
+
+  sniffer:
+    build: ./sniffer/
+    container_name: sniffer
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      - testnet
+
+networks:
+  testnet:
+    name: testnet
+    driver: bridge
