@@ -36,12 +36,12 @@ class MiniTCPConnection:
             payload=payload
         )
         data = pkt.to_bytes()
-        # self.sock.______(____, ________)
+        self.sock.sendto(data, self.peer)
         # udp 기반 송신, 직렬화한 패킷 데이터를 상대 주소로 전송
 
     def recv_packet(self):
         data, addr = self.sock.recvfrom(4096)
-        # pkt = ______._______(data)
+        pkt = MiniTCPPacket.from_bytes(data)
         # 수신한 raw 데이터를 parsing하여 저장
         return pkt, addr
      
@@ -52,7 +52,7 @@ class MiniTCPConnection:
         self.send_packet(SYN)
         while True:
             try:
-                # _____, _____ = self.________()
+                pkt, _ = self.recv_packet()
                 # 서버로부터 무언가를 수신하려고 함
             except socket.timeout:
                 print("Timeout waiting for SYN+ACK, resend SYN")
@@ -61,9 +61,9 @@ class MiniTCPConnection:
             # SYN + ACK 응답인지 확인
             if pkt.flags & SYN and pkt.flags & ACK:
                 handshake_rtt = time.time() - start_time
-                # self.ack = ___.______ + 1
+                self.ack = pkt.seq_num + 1
                 # 서버가 보낸 무언가+1을 ack 번호로 설정
-                # self._______(___)
+                self.send_packet(ACK)
                 # 서버에게 무언가를 어떻게 하여 3-way handshake 과정 완료
                 break
         # 초기 cwnd 기록
@@ -78,9 +78,9 @@ class MiniTCPConnection:
                 continue
             if pkt.flags & SYN:
                 self.peer = (addr[0], pkt.src_port)
-                # self.ack = ____._____ + 1
+                self.ack = pkt.seq_num + 1
                 # 클라이언트의 무언가+1을 ack번호로 설정
-                # self.send_packet(___ | ____)
+                self.send_packet(SYN | ACK)
                 # TCP 연결에 필요한 무언가 2가지를 전송
                 start_time = time.time()
                 break
@@ -109,12 +109,12 @@ class MiniTCPConnection:
             if pkt.flags & ACK:
                 rtt = time.time() - start_time  # RTT 계산
                 # ACK 받은 경우에 혼잡 제어를 위한 처리 함수 실행
-                # self.cc.______()
+                self.cc.on_ack()
                 self.cwnd_history.append((rtt, self.cc.cwnd))
         except socket.timeout:
             print("ACK timeout")
             # ACK를 못받았을 경우에 혼잡 제어를 위해 함수 실행
-            # self.cc._______()
+            self.cc.on_loss()
             self.cwnd_history.append((TIMEOUT, self.cc.cwnd))
 
     def recv(self):
@@ -129,12 +129,12 @@ class MiniTCPConnection:
             # ACK 응답
             self.ack = pkt.seq_num + len(pkt.payload)
             # 수신받은 이후에 수신받았다는 무언가의 행동을 함
-            # self._______(____)
+            self.send_packet(ACK)
             return data
 
     def close(self):
         # ___ 전송 
-        # self.send_packet(___)
+        self.send_packet(FIN)
         # (선택) ACK 응답 기다리기 생략 가능
         # 종료 지점에서 시각화 호출
         plot_cwnd(self.cwnd_history)
