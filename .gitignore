@@ -6,3 +6,7 @@
 # Packet captures
 *.pcap
 *.pcapng
+*.gguf
+
+/cn/
+*/__pycache__/
