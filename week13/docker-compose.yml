@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  r1:
+    build: .
+    container_name: r1
+    hostname: r1
+    privileged: true
+    volumes:
+      - ./frr/r1/frr.conf:/etc/frr/frr.conf
+      - ./daemons:/etc/frr/daemons
+      - ./docker-start:/usr/lib/frr/docker-start
+    networks:
+      nw56:
+        ipv4_address: 192.168.56.2
+
+  r2:
+    build: .
+    container_name: r2
+    hostname: r2
+    privileged: true
+    volumes:
+      - ./frr/r2/frr.conf:/etc/frr/frr.conf
+      - ./daemons:/etc/frr/daemons
+      - ./docker-start:/usr/lib/frr/docker-start
+    networks:
+      nw56:
+        ipv4_address: 192.168.56.3
+      nw58:
+        ipv4_address: 192.168.58.2
+
+  r3:
+    build: .
+    container_name: r3
+    hostname: r3
+    privileged: true
+    volumes:
+      - ./frr/r3/frr.conf:/etc/frr/frr.conf
+      - ./daemons:/etc/frr/daemons
+      - ./docker-start:/usr/lib/frr/docker-start
+    networks:
+      nw57:
+        ipv4_address: 192.168.57.2
+      nw58:
+        ipv4_address: 192.168.58.3
+
+  r4:
+    build: .
+    container_name: r4
+    hostname: r4
+    privileged: true
+    volumes:
+      - ./frr/r4/frr.conf:/etc/frr/frr.conf
+      - ./daemons:/etc/frr/daemons
+      - ./docker-start:/usr/lib/frr/docker-start
+    networks:
+      nw57:
+        ipv4_address: 192.168.57.3
+
+networks:
+  nw56:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.56.0/24
+  nw57:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.57.0/24
+  nw58:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.58.0/24
