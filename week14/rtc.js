@@ -6,6 +6,12 @@ let remoteVideo = document.getElementById("remoteVideo");
 let isInitiator = false;
 let isStarted = false;
 let pc;  // RTCPeerConnection
+let isVideoOff = false;       // 비디오 끄기
+let isScreenSharing = false;  // 화면 공유
+let originalVideoTrack;                 // 원본 카메라 트랙 저장
+let mediaRecorder;                      // 녹화
+let recordedChunks = [];        // 녹화 데이터 저장
+let isRecording = false;      // 녹화 상태
 
 // ICE 서버 설정 (Google STUN 서버 사용)
 let pcConfig = {
@@ -65,3 +71,27 @@ function maybeStart() {
             .then(() => socket.emit('offer', pc.localDescription));
     }
 }
+
+function toggleVideo() {
+  isVideoOff = !isVideoOff;
+  if (isVideoOff) {
+    navigator.mediaDevices.getUserMedia({video: false, audio: true});
+  } else {
+    navigator.mediaDevices.getUserMedia({video: true, audio: true});
+  }
+}
+
+function toggleScreenShare() {
+  isScreenSharing = !isScreenSharing;
+  if (!isVideoOff) {
+    
+  }
+}
+
+function toggleRecording() {}
+
+
+window.toggleVideo() = toggleVideo;
+window.toggleScreenShare() = toggleScreenShare;
+window.toggleRecording() = toggleRecording;
+window.downloadRecording = downloadRecording;
