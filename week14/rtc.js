@@ -73,11 +73,15 @@ function maybeStart() {
 }
 
 function toggleVideo() {
-  isVideoOff = !isVideoOff;
-  if (isVideoOff) {
-    navigator.mediaDevices.getUserMedia({video: false, audio: true});
-  } else {
-    navigator.mediaDevices.getUserMedia({video: true, audio: true});
+  if (!localStream) return;
+  let videoTrack = localStream.getVideoTracks()[0];
+  videoTrack.enabled = false; // 끄기
+  videoTrack.enabled = true;  // 켜기
+
+  if (videoTrack) {
+    isVideoOff = !isVideoOff;
+    videoTrack.enabled = isVideoOff ? false : true;
+    videoBtn.textContent = isVideoOff ? '비디오 켜기' : '비디오 끄기';
   }
 }
 
