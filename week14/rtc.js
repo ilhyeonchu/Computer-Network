@@ -86,14 +86,69 @@ function toggleVideo() {
 }
 
 function toggleScreenShare() {
-  isScreenSharing = !isScreenSharing;
-  if (!isVideoOff) {
-    
+  if (isScreenSharing) {
+    stopScreenShare();
+  } else {
+    startScreenShare();
   }
 }
 
-function toggleRecording() {}
+function startScreenShare() {
+  navigator.mediaDevices.getDisplayMedia({ video: true })
+    .then(stream => {
+      // 1. 화면 공유 트랙 가져오기
+      // 2. 로컬 비디오에 표시
+      // 3. 상태 변경
+    });
+}
 
+function stopScreenShare() {
+  // 원래 ㅁ카메라로 복원
+  // localStream으로 복원
+  isScreenSharing = false;
+}
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function downloadRecording() {
+  if (recordedChunks.length === 0) return;
+
+  let blob = new Blob(recordedChunks, { type: 'video/webm' });
+  let url = URL.createObjectURL(blob);
+  
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = 'recording_' + new Data().tolSOString().replace(/:/g,'-') + '.webm'
+
+  a.click();
+}
+
+function startRecording() {
+  let stream = localVideo.srcObject;  // 1. 녹화할 스트림
+  recordedChunks = [];  // 2. 데이터 저장 배열 초기화
+  medialRecorder = ;  // mediaRecorder 생성
+  mediaRecorder.ondataavailable = function(e) {
+    // 4. 데이터 수집 + 녹화 완료
+  };
+  mediaRecorder.onstop = function() {
+    let blob = ; // Blob 생성
+    let url = ; // URL 변환
+    recordedVideo.src = url;  // 비디오에서 재생
+  };
+    // add someting 녹화 시작
+  isRecording = ture;
+}
+
+function stopRecording() {
+  // add someting 녹화 중지 
+  isRecording = false;
+}
 
 window.toggleVideo() = toggleVideo;
 window.toggleScreenShare() = toggleScreenShare;
