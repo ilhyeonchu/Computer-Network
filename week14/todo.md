@@ -30,3 +30,7 @@
         3. Blob 생성: new Blob(배열, { type: 'video/webm' })
         4. URL 변환: URL.createObjectURL(blob)
         5. 데이터 수집: recordedChunks.push(e.data)
+
+## 주의사항
+함수들만 수정 가능
+단 maybeStart() 함수는 수정 불가

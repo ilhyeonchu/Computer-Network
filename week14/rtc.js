@@ -2,6 +2,7 @@
 
 let localVideo = document.getElementById("localVideo");
 let remoteVideo = document.getElementById("remoteVideo");
+let recordedVideo = document.getElementById("recordedVideo");
 
 let isInitiator = false;
 let isStarted = false;
@@ -12,6 +13,7 @@ let originalVideoTrack;                 // 원본 카메라 트랙 저장
 let mediaRecorder;                      // 녹화
 let recordedChunks = [];        // 녹화 데이터 저장
 let isRecording = false;      // 녹화 상태
+let localStream;                      // 로컬 스트림
 
 // ICE 서버 설정 (Google STUN 서버 사용)
 let pcConfig = {
@@ -73,16 +75,14 @@ function maybeStart() {
 }
 
 function toggleVideo() {
-  if (!localStream) return;
-  let videoTrack = localStream.getVideoTracks()[0];
-  videoTrack.enabled = false; // 끄기
-  videoTrack.enabled = true;  // 켜기
-
-  if (videoTrack) {
-    isVideoOff = !isVideoOff;
-    videoTrack.enabled = isVideoOff ? false : true;
-    videoBtn.textContent = isVideoOff ? '비디오 켜기' : '비디오 끄기';
-  }
+  const currentStream = localVideo.srcObject || localStream;
+  if (!currentStream) return;
+  const videoTrack = currentStream.getVideoTracks()[0];
+  if (!videoTrack) return;
+  isVideoOff = !isVideoOff;
+  videoTrack.enabled = !isVideoOff;
+  const videoBtn = document.querySelector('button[onclick="toggleVideo()"]');
+  if (videoBtn) videoBtn.textContent = isVideoOff ? '비디오 켜기' : '비디오 끄기';
 }
 
 function toggleScreenShare() {
@@ -96,16 +96,29 @@ function toggleScreenShare() {
 function startScreenShare() {
   navigator.mediaDevices.getDisplayMedia({ video: true })
     .then(stream => {
-      // 1. 화면 공유 트랙 가져오기
-      // 2. 로컬 비디오에 표시
-      // 3. 상태 변경
+      const screenTrack = stream.getVideoTracks()[0];
+      if (!screenTrack) return;
+      originalVideoTrack = localStream ? localStream.getVideoTracks()[0] : null;
+      const sender = pc && pc.getSenders ? pc.getSenders().find(s => s.track && s.track.kind === 'video') : null;
+      if (sender) sender.replaceTrack(screenTrack);
+      localVideo.srcObject = stream;
+      isScreenSharing = true;
+      const shareBtn = document.querySelector('button[onclick="toggleScreenShare()"]');
+      if (shareBtn) shareBtn.textContent = '화면 공유 중지';
+      screenTrack.onended = stopScreenShare;
     });
 }
 
 function stopScreenShare() {
-  // 원래 ㅁ카메라로 복원
-  // localStream으로 복원
+  if (!isScreenSharing) return;
+  const currentStream = localVideo.srcObject;
+  if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+  const sender = pc && pc.getSenders ? pc.getSenders().find(s => s.track && s.track.kind === 'video') : null;
+  if (sender && originalVideoTrack) sender.replaceTrack(originalVideoTrack);
+  if (localStream) localVideo.srcObject = localStream;
   isScreenSharing = false;
+  const shareBtn = document.querySelector('button[onclick="toggleScreenShare()"]');
+  if (shareBtn) shareBtn.textContent = '화면 공유';
 }
 
 function toggleRecording() {
@@ -124,33 +137,40 @@ function downloadRecording() {
   
   let a = document.createElement('a');
   a.href = url;
-  a.download = 'recording_' + new Data().tolSOString().replace(/:/g,'-') + '.webm'
+  a.download = 'recording_' + new Date().toISOString().replace(/:/g,'-') + '.webm';
 
   a.click();
+  URL.revokeObjectURL(url);
 }
 
 function startRecording() {
   let stream = localVideo.srcObject;  // 1. 녹화할 스트림
+  if (!stream) return;
   recordedChunks = [];  // 2. 데이터 저장 배열 초기화
-  medialRecorder = ;  // mediaRecorder 생성
+  mediaRecorder = new MediaRecorder(stream);  // mediaRecorder 생성
   mediaRecorder.ondataavailable = function(e) {
-    // 4. 데이터 수집 + 녹화 완료
+    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
   };
   mediaRecorder.onstop = function() {
-    let blob = ; // Blob 생성
-    let url = ; // URL 변환
+    let blob = new Blob(recordedChunks, { type: 'video/webm' }); // Blob 생성
+    let url = URL.createObjectURL(blob); // URL 변환
     recordedVideo.src = url;  // 비디오에서 재생
   };
-    // add someting 녹화 시작
-  isRecording = ture;
+  mediaRecorder.start(); // 녹화 시작
+  isRecording = true;
+  const recordBtn = document.querySelector('button[onclick="toggleRecording()"]');
+  if (recordBtn) recordBtn.textContent = '녹화 중지';
 }
 
 function stopRecording() {
-  // add someting 녹화 중지 
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+  mediaRecorder.stop();  // 녹화 중지 
   isRecording = false;
+  const recordBtn = document.querySelector('button[onclick="toggleRecording()"]');
+  if (recordBtn) recordBtn.textContent = '녹화 시작';
 }
 
-window.toggleVideo() = toggleVideo;
-window.toggleScreenShare() = toggleScreenShare;
-window.toggleRecording() = toggleRecording;
+window.toggleVideo = toggleVideo;
+window.toggleScreenShare = toggleScreenShare;
+window.toggleRecording = toggleRecording;
 window.downloadRecording = downloadRecording;
